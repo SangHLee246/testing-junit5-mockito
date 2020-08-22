@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SpecialitySDJpaServiceTest {
@@ -176,5 +176,26 @@ class SpecialitySDJpaServiceTest {
 
         //then
         assertThat(returnedSpecialty.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    void testSaveLambdaNoMatch() {
+        //given
+        final String MATCH_ME = "MATCH_ME";
+        Speciality speciality = new Speciality();
+        speciality.setDescription("Not a match");
+
+        Speciality savedSpecialty = new Speciality();
+        savedSpecialty.setId(1L);
+
+        //need mock to only return on match MATCH_ME string
+        given(specialtyRepository.save(argThat(argument -> argument.getDescription().equals(MATCH_ME)))).willReturn(savedSpecialty);
+
+        //when
+        Speciality returnedSpecialty = service.save(speciality);
+
+        //then
+        assertNull(returnedSpecialty);
     }
 }
